@@ -1,0 +1,478 @@
+---
+title: "STSCI 4740 - Final Project"
+author: "Alex Chen, Jessica Han, Abby Kim"
+output: word_document
+date: "2023-12-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Subset selection methods:
+```{r}
+# 1) testing white wine quality first
+wine_white <- read.csv("winequality-white.csv", sep = ";")
+
+set.seed(1)
+summary(wine_white)
+names(wine_white)
+
+library(leaps)
+#Best subset selection for white wine
+regfit.full <- regsubsets(quality ~ ., data = wine_white, nvmax = 11)
+reg.summary <- summary(regfit.full)
+#a
+reg.summary
+
+#b
+reg.summary$rsq
+
+#c
+par("mar")
+par(mfrow=c(2,2))
+
+#plotting RSS
+plot(reg.summary$rss,xlab="Number of Variables",ylab="RSS",type="l")
+
+#plotting adjusted R^2
+plot(reg.summary$adjr2,xlab="Number of Variables",ylab="Adjusted RSq",type="l")
+which.max(reg.summary$adjr2)
+points(8,reg.summary$adjr2[8], col="red",cex=2,pch=20)
+
+#plotting Cp
+plot(reg.summary$cp,xlab="Number of Variables",ylab="Cp",type='l')
+which.min(reg.summary$cp)
+points(8,reg.summary$cp[8],col="red",cex=2,pch=20)
+
+#plotting BIC
+which.min(reg.summary$bic)
+plot(reg.summary$bic,xlab="Number of Variables",ylab="BIC",type='l')
+points(8,reg.summary$bic[8],col="red",cex=2,pch=20)
+
+#d
+coef(regfit.full, 8)
+
+#Forward subset selection for white wine 
+#e
+regfit.fwd <- regsubsets(quality ~ ., data = wine_white, nvmax = 11, method = "forward")
+summary(regfit.fwd)
+coef(regfit.fwd, 8)
+#f
+regfwd.summary <- summary(regfit.fwd)
+regfwd.summary
+
+#plotting adjusted R^2
+plot(regfwd.summary$adjr2,xlab="Number of Variables",ylab="Adjusted RSq",type="l")
+which.max(regfwd.summary$adjr2)
+points(8,regfwd.summary$adjr2[8], col="red",cex=2,pch=20)
+
+#plotting Cp
+plot(regfwd.summary$cp,xlab="Number of Variables",ylab="Cp",type='l')
+which.min(regfwd.summary$cp)
+points(8,regfwd.summary$cp[8],col="red",cex=2,pch=20)
+
+#plotting BIC
+which.min(regfwd.summary$bic)
+plot(regfwd.summary$bic,xlab="Number of Variables",ylab="BIC",type='l')
+points(8,regfwd.summary$bic[8],col="red",cex=2,pch=20)
+
+#Backward subset selection for white wine
+#g
+regfit.bwd <- regsubsets(quality ~ ., data = wine_white, nvmax = 11, method = "backward")
+regbwd.summary <- summary(regfit.bwd)
+regbwd.summary
+
+#plotting adjusted R^2
+plot(regbwd.summary$adjr2,xlab="Number of Variables",ylab="Adjusted RSq",type="l")
+which.max(regbwd.summary$adjr2)
+points(8,regbwd.summary$adjr2[8], col="red",cex=2,pch=20)
+
+#plotting Cp
+plot(regbwd.summary$cp,xlab="Number of Variables",ylab="Cp",type='l')
+which.min(regbwd.summary$cp)
+points(8,regbwd.summary$cp[8],col="red",cex=2,pch=20)
+
+#plotting BIC
+which.min(regbwd.summary$bic)
+plot(regbwd.summary$bic,xlab="Number of Variables",ylab="BIC",type='l')
+points(8,regbwd.summary$bic[8],col="red",cex=2,pch=20)
+
+coef(regfit.full,8)  
+coef(regfit.fwd,8)
+coef(regfit.bwd,8)
+
+#splitting data between training and testing to calculate MSE
+training_white.index <- sample(1:nrow(wine_white), size = nrow(wine_white) /2 )
+training_white <- wine_white[training_white.index,]
+test_white <- wine_white[-training_white.index,]
+
+#calculating MSE for white wines
+lmquality = lm(quality ~ volatile.acidity + citric.acid + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + pH + sulphates + alcohol, data = training_white)
+summary(lmquality)
+white_wine_predict <- predict(lmquality, newdata = test_white)
+mean((white_wine_predict - test_white$quality)^2)
+
+#2) testing red wine quality n
+wine_red <- read.csv("winequality-red.csv", sep = ";")
+
+set.seed(1)
+summary(wine_red)
+
+library(leaps)
+#Best subset selection for red wine
+regfit_red.full <- regsubsets(quality ~ ., data = wine_red, nvmax = 11)
+reg_red.summary <- summary(regfit_red.full)
+#h
+reg_red.summary
+names(reg_red.summary)
+reg_red.summary$rsq
+
+par("mar")
+par(mar=c(1,1,1,1))
+par(mfrow=c(2,2))
+plot(reg_red.summary$rss,xlab="Number of Variables",ylab="RSS",type="l")
+
+#i
+#plotting adjusted R^2
+plot(reg_red.summary$adjr2,xlab="Number of Variables",ylab="Adjusted RSq",type="l")
+which.max(reg_red.summary$adjr2)
+points(8,reg_red.summary$adjr2[8], col="red",cex=2,pch=20)
+
+#plotting Cp
+plot(reg_red.summary$cp,xlab="Number of Variables",ylab="Cp",type='l')
+which.min(reg_red.summary$cp)
+points(7,reg_red.summary$cp[7],col="red",cex=2,pch=20)
+
+#plotting BIC
+which.min(reg_red.summary$bic)
+plot(reg_red.summary$bic,xlab="Number of Variables",ylab="BIC",type='l')
+points(6,reg_red.summary$bic[6],col="red",cex=2,pch=20)
+
+coef(regfit_red.full, 6)
+coef(regfit_red.full, 7)
+
+#splitting data between training and testing to calculate MSE
+training_red.index <- sample(1:nrow(wine_red), size = nrow(wine_red) /2 )
+training_red <- wine_red[training_red.index,]
+test_red <- wine_red[-training_red.index,]
+
+#calculating MSE for red wines
+lmquality = lm(quality ~ volatile.acidity + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + pH + sulphates + alcohol, data = training_red)
+summary(lmquality)
+red_wine_predict <- predict(lmquality, newdata = test_red)
+mean((red_wine_predict - test_red$quality)^2)
+
+#Forward subset selection for red wine 
+regfit_red.fwd <- regsubsets(quality ~ ., data = wine_red, nvmax = 11, method = "forward")
+summary(regfit_red.fwd)
+coef(regfit_red.fwd, 7)
+regfwd_red.summary <- summary(regfit_red.fwd)
+regfwd_red.summary
+regfwd_red.summary$rsq
+
+#plotting adjusted R^2
+plot(regfwd_red.summary$adjr2,xlab="Number of Variables",ylab="Adjusted RSq",type="l")
+which.max(regfwd_red.summary$adjr2)
+points(8,regfwd_red.summary$adjr2[8], col="red",cex=2,pch=20)
+
+#plotting Cp
+plot(regfwd_red.summary$cp,xlab="Number of Variables",ylab="Cp",type='l')
+which.min(regfwd_red.summary$cp)
+points(8,regfwd_red.summary$cp[8],col="red",cex=2,pch=20)
+
+#plotting BIC
+which.min(regfwd_red.summary$bic)
+plot(regfwd_red.summary$bic,xlab="Number of Variables",ylab="BIC",type='l')
+points(8,regfwd_red.summary$bic[8],col="red",cex=2,pch=20)
+
+
+#Backward subset selection for red wine
+regfit_red.bwd <- regsubsets(quality ~ ., data = wine_red, nvmax = 11, method = "backward")
+regbwd_red.summary <- summary(regfit_red.bwd)
+regbwd_red.summary
+regbwd_red.summary$rsq
+
+#plotting adjusted R^2
+plot(regbwd_red.summary$adjr2,xlab="Number of Variables",ylab="Adjusted RSq",type="l")
+which.max(regbwd_red.summary$adjr2)
+points(8,regbwd_red.summary$adjr2[8], col="red",cex=2,pch=20)
+
+#plotting Cp
+plot(regbwd_red.summary$cp,xlab="Number of Variables",ylab="Cp",type='l')
+which.min(regbwd_red.summary$cp)
+points(8,regbwd_red.summary$cp[8],col="red",cex=2,pch=20)
+
+#plotting BIC
+which.min(regbwd_red.summary$bic)
+plot(regbwd_red.summary$bic,xlab="Number of Variables",ylab="BIC",type='l')
+points(8,regbwd_red.summary$bic[8],col="red",cex=2,pch=20)
+
+
+#finding coeffcients with best variable model 
+coef(regfit_red.full, 7)
+coef(regfit_red.fwd, 7)
+coef(regfit_red.bwd, 7)
+
+```
+
+\newpage
+
+## Non-subset selection regression methods: 
+```{r}
+#Setup
+
+set.seed(1)
+
+white <- read.csv('wine+quality/winequality-white.csv', sep=';')
+red <- read.csv('wine+quality/winequality-red.csv', sep=';')
+
+train.white.index <- sample(1:nrow(white), size=nrow(white)/2)
+train.white <- white[train.white.index,]
+test.white <- white[-train.white.index,]
+
+train.red.index <- sample(1:nrow(red), size=nrow(red)/2)
+train.red <- red[train.red.index,]
+test.red <- red[-train.red.index,]
+```
+```{r}
+#Random Forests / Bagging
+
+library(randomForest)
+
+random.forests <- function(train, test, forests){
+  set.seed(1)
+  
+  forest.model <- randomForest(train$quality ~ ., data = train, mtry = forests, importance = T)
+  forest.prediction <- predict(forest.model, newdata = test)
+  
+  print(mean((forest.prediction - test$quality)^2))
+
+}
+
+#Red
+for (i in c(1:5, 11)){
+  random.forests(train.red, test.red, i)
+}
+
+# 4 forests performed the best - look at importance of variables
+four.red <- randomForest(quality ~ ., data = train.red, mtry = 4, importance = T)
+importance(four.red)
+
+#White
+for (i in c(1:5, 11)){
+  random.forests(train.white, test.white, i)
+}
+
+# 3 forests performed the best - look at importance of variables
+three.white <- randomForest(quality ~ ., data = train.white, mtry = 3, importance = T)
+importance(three.white)
+
+```
+```{r}
+#BART
+
+set.seed(1)
+
+library(BART)
+
+bart <- function(train, test){
+  xtrain <- train[, 1:11]
+  ytrain <- train$quality
+  xtest <- test[, 1:11]
+  ytest <- test$quality
+
+  set.seed(1)
+
+  bart.model <- gbart(xtrain, ytrain, x.test=xtest)
+  bart.predict <- bart.model$yhat.test.mean
+
+  print(mean((ytest - bart.predict)^2))
+  print(bart.model$varcount.mean[order(bart.model$varcount.mean, decreasing = T)])
+}
+
+#Red
+bart(train.red, test.red)
+
+
+#White
+bart(train.white, test.white)
+
+```
+```{r}
+#Ridge Regression
+
+library(glmnet)
+
+set.seed(1)
+grid <- 10^seq(10, -2, length = 100)
+x.train.white <- model.matrix(quality ~ ., train.white)[, -1]
+x.test.white <- model.matrix(quality ~ ., test.white)[, -1]
+y.train.white <- train.white$quality
+y.test.white <- test.white$quality
+x.train.red <- model.matrix(quality ~ ., train.red)[, -1]
+x.test.red <- model.matrix(quality ~ ., test.red)[, -1]
+y.train.red <- train.red$quality
+y.test.red <- test.red$quality
+
+ridge.regression <- function(x.train, y.train, x.test, y.test){
+  ridge.mod <- glmnet(x.train, y.train, alpha = 0, lambda = grid)
+
+  ridge.cv <- cv.glmnet(x = x.train, y = y.train, alpha = 0)
+  plot(ridge.cv)
+  bestlam <- ridge.cv$lambda.min
+  print(bestlam)
+
+  ridge.predict <- predict(ridge.mod, s = bestlam, newx = x.test)
+  mean((ridge.predict - y.test)^2)
+}
+
+#Red
+ridge.regression(x.train.red, y.train.red, x.test.red, y.test.red)
+
+#White
+ridge.regression(x.train.white, y.train.white, x.test.white, y.test.white)
+
+```
+```{r}
+#Lasso
+
+set.seed(1)
+
+lasso <- function(x.train, y.train, x.test, y.test){
+  lasso.mod <- glmnet(x.train, y.train, alpha = 1, lambda = grid)
+
+  lasso.cv <- cv.glmnet(x = x.train, y = y.train, alpha = 1)
+  plot(lasso.cv)
+  bestlam <- lasso.cv$lambda.min
+  print(bestlam)
+
+  lasso.predict <- predict(lasso.mod, s = bestlam, newx = x.test)
+  print(mean((lasso.predict - y.test)^2))
+  
+  lasso.coef <- predict(lasso.mod, type = 'coefficients', s = bestlam)
+  lasso.coef
+}
+
+#Red
+lasso(x.train.red, y.train.red, x.test.red, y.test.red)
+
+#White
+lasso(x.train.white, y.train.white, x.test.white, y.test.white)
+
+```
+
+## Classification Methods
+```{r}
+wine_white <- read.csv('winequality-white.csv', sep =';')
+
+white_quality <- ifelse(wine_white$quality > median(wine_white$quality), yes = 1, no = 0)
+
+white <- data.frame(wine_white, wine_white$quality)
+
+
+set.seed(1)
+training.index <- sample(1:nrow(white), size = nrow(white) / 2)
+training_white <- wine_white[training.index,]
+training_white.quality <- ifelse(training_white$quality > median(wine_white$quality), yes = 1, no = 0)
+test_white <- wine_white[-training.index, ]
+test_white.quality <- ifelse(test_white$quality > median(wine_white$quality), yes = 1, no = 0)
+
+library(MASS)
+lda.fit <- lda(quality ~ . , data = training_white)
+lda.pred <- predict(lda.fit, test_white)
+mean(lda.pred$class != test_white$quality)
+
+
+
+#logistic regression
+glm.fit <- glm(quality ~ . , data = training_white)
+glm.probs = predict(glm.fit, test_white, type = "response")
+glm.pred = rep(0, length(glm.probs))
+glm.pred[glm.probs > median(wine_white$quality)] = 1
+mean(glm.pred != test_white.quality)
+
+
+#naive bayes
+library(e1071)
+nb.fit <- naiveBayes(quality ~ . , data = training_white)
+nb.class <- predict(nb.fit, test_white)
+mean(nb.class != test_white$quality)
+
+#knn
+library(class)
+train.X <- cbind(training_white[, 1:11])
+test.X <- cbind(test_white[, 1:11])
+training_white_quality <- training_white$quality
+set.seed(1)
+
+knn.pred <- knn(train.X, test.X, training_white_quality, k=1)
+mean(knn.pred != test_white$quality)
+
+
+knn.pred <- knn(train.X, test.X, training_white_quality, k=5)
+mean(knn.pred != test_white$quality)
+
+knn.pred <- knn(train.X, test.X, training_white_quality, k=10)
+mean(knn.pred != test_white$quality)
+
+knn.pred <- knn(train.X, test.X, training_white_quality, k=100)
+mean(knn.pred != test_white$quality)
+
+wine_red <- read.csv('winequality-red.csv', sep =';')
+
+red_quality <- ifelse(wine_red$quality > median(wine_red$quality), yes = 1, no = 0)
+
+red <- data.frame(wine_red, wine_red$quality)
+
+
+set.seed(1)
+training.red.index <- sample(1:nrow(red), size = nrow(red) / 2)
+training_red <- wine_red[training.red.index,]
+test_red <- wine_red[-training.red.index, ]
+test_red.quality <- ifelse(test_red$quality > median(wine_red$quality), yes = 1, no = 0)
+
+library(MASS)
+lda.fit <- lda(quality ~ . , data = training_red)
+lda.pred <- predict(lda.fit, test_red)
+mean(lda.pred$class != test_red$quality)
+
+
+#logistic regression
+glm.fit <- glm(quality ~ . , data = training_red)
+glm.probs = predict(glm.fit, test_red, type = "response")
+glm.pred = rep(0, length(glm.probs))
+glm.pred[glm.probs > median(wine_red$quality)] = 1
+mean(glm.pred != test_red.quality)
+
+
+#naive bayes
+library(e1071)
+nb.fit <- naiveBayes(quality ~ . , data = training_red)
+nb.class <- predict(nb.fit, test_red)
+mean(nb.class != test_red$quality)
+
+#knn
+train.X <- cbind(training_red[, 1:11])
+test.X <- cbind(test_red[, 1:11])
+training_red_quality <- training_red$quality
+set.seed(1)
+
+knn.pred <- knn(train.X, test.X, training_red_quality, k=1)
+mean(knn.pred != test_red$quality)
+
+knn.pred <- knn(train.X, test.X, training_red_quality, k=5)
+mean(knn.pred != test_red$quality)
+
+knn.pred <- knn(train.X, test.X, training_red_quality, k=10)
+mean(knn.pred != test_red$quality)
+
+knn.pred <- knn(train.X, test.X, training_red_quality, k=15)
+mean(knn.pred != test_red$quality)
+
+knn.pred <- knn(train.X, test.X, training_red_quality, k=20)
+mean(knn.pred != test_red$quality)
+
+knn.pred <- knn(train.X, test.X, training_red_quality, k=100)
+mean(knn.pred != test_red$quality)
+```
